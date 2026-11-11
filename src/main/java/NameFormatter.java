@@ -1,3 +1,7 @@
+import org.testng.annotations.Test;
+
+import static org.testng.AssertJUnit.assertEquals;
+
 public class NameFormatter {
 
     // Private constructor
@@ -9,7 +13,7 @@ public class NameFormatter {
         return firstName + " " + lastName;
     }
 
-    // Format: Prefix First Middle,Last, Suffix
+    // Format: Prefix First Middle Last, Suffix
     public static String format(String prefix,
                                 String firstName,
                                 String middleName,
@@ -37,15 +41,96 @@ public class NameFormatter {
         return result;
     }
 
-    // Format a full name into standard format: Last, First Middle
+    // Converts full name to: LastName, FirstName MiddleName
     public static String format(String fullName) {
-        String[] parts = fullName.trim().split("\\s+");
 
-        if (parts.length == 2) {
-            return parts[1] + ", " + parts[0];
-        } else if (parts.length == 3) {
-            return parts[2] + ", " + parts[0] + " " + parts[1];
+        // Remove suffix if present
+        String namePart = fullName;
+        if (fullName.contains(",")) {
+            namePart = fullName.substring(0, fullName.indexOf(",")).trim();
         }
 
-        return fullName;
-    }}
+        String[] parts = namePart.split("\\s+");
+
+        String prefix = "";
+        int start = 0;
+
+        // Simple prefix detection
+        if (parts[0].endsWith(".")) {
+            prefix = parts[0];
+            start = 1;
+        }
+
+        String firstName = parts[start];
+        String middleName = "";
+        String lastName;
+
+        if (parts.length - start == 3) {
+            middleName = parts[start + 1];
+            lastName = parts[start + 2];
+        } else {
+            lastName = parts[start + 1];
+        }
+
+        if (!middleName.isEmpty()) {
+            return lastName + ", " + firstName + " " + middleName;
+        }
+
+        return lastName + ", " + firstName;
+    }
+}
+import org.junit.jupiter.api.Test;
+import static  org.junit.jupiter.api.Assertions.*;
+
+class NameFormatterTest {
+
+    @Test
+    public void testFirstLastFormat() {
+        String result = NameFormatter.format("Mel", "Johnson");
+        assertEquals("Mel Johnson", result);
+    }
+
+    @Test
+    public void testFullFormatWithPrefixMiddleAndSuffix() {
+        String result = NameFormatter.format(
+                "Dr.",
+                "Mel",
+                "B",
+                "Johnson",
+                "PhD");
+
+        assertEquals("Dr. Mel B Johnson, PhD", result);
+    }
+
+    @Test
+    public void testFullNameWithPrefixMiddleAndSuffix() {
+        String result = NameFormatter.format(
+                "Dr. Mel B Johnson, PhD");
+
+        assertEquals("Johnson, Mel B", result);
+    }
+
+    @Test
+    public void testFullNameWithMiddleAndSuffix() {
+        String result = NameFormatter.format(
+                "Mel B Johnson, PhD");
+
+        assertEquals("Johnson, Mel B", result);
+    }
+
+    @Test
+    public void testFullNameWithoutMiddleName() {
+        String result = NameFormatter.format(
+                "Mel Johnson");
+
+        assertEquals("Johnson, Mel", result);
+    }
+
+    @Test
+    public void testAnotherName() {
+        String result = NameFormatter.format(
+                "Mrs. Sarah Jane Smith, MBA");
+
+        assertEquals("Smith, Sarah Jane", result);
+    }
+}
